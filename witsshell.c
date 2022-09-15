@@ -99,7 +99,7 @@ char ***splitParrallel(char **arr){
 		//printf("%s\n",arr[p]);
 		if (strcmp(arr[p],"&") == 0){
 			args[i] = temp;
-			print(args[i]);
+			//print(args[i]);
 			i++;
 			n = 0;
 			free(temp);
@@ -112,7 +112,7 @@ char ***splitParrallel(char **arr){
 		p++;
 	}
 	args[i] = temp;
-	print(args[i]);
+	//print(args[i]);
 
 	return args;
 }
@@ -122,7 +122,6 @@ char ***ammendPaths(char ***args, char **path) {
 	while (args[p] != NULL) {
 		char **temp = args[p];
 		int i = 0;
-		//printf("I don't understand");
 		while (path[i] != NULL) {
 			char *tempPath = (char *) malloc( strlen(path[i]) + 1 );
 			strcpy(tempPath,path[i]);
@@ -130,7 +129,6 @@ char ***ammendPaths(char ***args, char **path) {
 			if (access(tempPath,X_OK) != -1){
 				temp[0] = tempPath;
 				args[p] = temp;
-				//print(temp);
 			}  else {
 				i++;
 			}
@@ -145,47 +143,47 @@ int doInstructions(char ***args, char **path){
 	int status = 0;
 
 	int p = 0;
-	int len = 0;
 
 	while (args[p] != NULL) {
-		len++;
+		p++;
 	}
-	printf("%d\n",len);
-	p = 0;
+	//printf("%d\n",p);
 
-	pid_t pids[len];
+	pid_t pids[p];
+	for (int i=0; i < p; ++i) {
+		char **temp = args[0];
+		//print(temp);
+		if ((pids[i] = fork()) < 0) {
+			perror("fork");
+			exit(1);
+		} else if (pids[i] == 0) {
+			char *fileName = handleOutput(temp);
+			FILE *fp;
+			if (fileName != NULL) {
+				fp = freopen(fileName, "w", stdout); 
+			}
+			status = execv(temp[0], temp); 
+			fclose(fp);
+		}
+	}
 
-	// while (args[p] != NULL) {
-	// 	char **temp = args[p];
-	// 	while (path[p] != NULL) {
-	// 		//Check is directory exsists cannot be done is parrallel path decomposes 
-	// 		char *temp = (char *) malloc( strlen(path[p]) + 1 );
-	// 		strcpy(temp,path[p]);
-	// 		strcat(temp,args[0]);
-	// 		//printf("%s\n",path[p]);
-	// 		if (access(temp,X_OK) != -1){
-	// 			args[0] = temp;
-	// 			//check out put
-	// 			char *fileName = handleOutput(args);
-	// 			if (fileName != NULL) {
-	// 				freopen(fileName, "w", stdout); 
-	// 			}
-	// 			pid = fork();
-	// 			if (pid == 0){
-	// 				status = execv(args[0], args); 
-	// 				if (status == -1) {
-	// 					printf("Process did not terminate correctly\n");
-	// 					exit(1);
-	// 				}
-	// 			}
-	// 			while ((wpid = wait(&status)) > 0);
-	// 		} else {
-	// 			p++;
-	// 		}
+	pid_t pid;
+	while (p > 0) {
+		pid = wait(&status);
+		p--;
+	}
+
+	// char **temp = args[0];
+	// 	print(temp);
+	// int pid = fork();
+	// if (pid == 0){
+	// 	status = execv(temp[0], temp); 
+	// 	if (status == -1) {
+	// 		printf("Process did not terminate correctly\n");
+	// 		exit(1);
 	// 	}
 	// }
-	//here is where the parrallel needs to happen
-
+	// while ((wpid = wait(&status)) > 0);
 }
 
 int builtIns(char ***a, char **path) {
@@ -199,7 +197,7 @@ int builtIns(char ***a, char **path) {
 	}
 	if (strcmp(args[0],"cd" )==0) {
 		chdir(args[1]);
-		return 0;
+		return 1;
 	}
 	a = ammendPaths(a,path);
 	if (path[0] != NULL){
@@ -210,7 +208,6 @@ int builtIns(char ***a, char **path) {
 
 int main(int MainArgc, char *MainArgv[]){
 
-	//chdir("/bin/");
 	size_t bufsize = 64;
 	path = malloc(bufsize * sizeof(char*));
 	path[0] = "/bin/";
