@@ -91,6 +91,59 @@ char *handleOutput(char **args){
 	return name;
 }
 
+char ***splitParrallel(char **arr){
+	size_t bufsize = 128;
+	size_t sbufsize = 32;
+	size_t mbufsize = 64;
+	char ***args =  malloc(bufsize * sizeof(char*));
+
+	int *pos = malloc(sbufsize * sizeof(int*));
+	pos[0] =0;
+	int i = 0;
+	int n = 0;
+	while(arr[i] != NULL){
+		if (strcmp(arr[i],"&" )==0){
+			pos[n] = i;
+			n++;
+		}
+		i++;
+	}
+	if (pos[0] == 0 ){
+		args[1] = arr;
+	} else {
+		for (int p=0; p<n+1; p++){
+			printf("P: %d\n",p);
+			char **temp = malloc(mbufsize * sizeof(char*));
+			int end = 0;
+			int j = 0;
+			if (p > n-1){
+				end = pos[p+1];
+				//printf("p+1\n");
+			} else {
+				end = i-1;
+				//printf("i-1\n");
+			}
+			if (p=0) {
+				j=0;
+				end = pos[0]-1;
+			} else {
+				j = pos[p+1];
+			}
+			int m = 0;
+			//printf("%d\n",end);
+			for (j; j<end; j++){
+				temp[m] = arr[j];
+				printf("%s\n", temp[m]);
+				m++;
+			}
+			args[p] = temp;
+		}
+	}
+	printf("i: %d\n", i);
+	printf("n: %d\n", n);
+	return args;
+}
+
 int doInstructions(char **args, char **path){
 	int wpid;
 	int pid;
@@ -146,15 +199,19 @@ int doInstructions(char **args, char **path){
 	return 1;
 }
 
-void print(char **arr) {
+void print(char ***arr) {
 	int p = 0;
-	char *instruction = arr[p];
-	while (instruction != NULL) {
+	char **arr2 = arr[p];
+	while (arr2 != NULL) {
+		int i = 0;
+		char *arr3 = arr2[i];
+		while (arr3 != NULL) {
+			arr3 = arr2[i];
+			printf("%s\n",arr3);
+			i++;
+		}
 		p++;
-		printf("%s\n",instruction);
-		instruction = arr[p];
 	}
-	
 }
 
 int main(int MainArgc, char *MainArgv[]){
@@ -167,12 +224,15 @@ int main(int MainArgc, char *MainArgv[]){
 	bool status = 1;
 	char *line;
 	char **instructions;
+	char ***args;
 
 	do {
 		printf("witsshell> ");
 		line = readLine();
 		instructions = splitLine(line);
-		status = doInstructions(instructions,path);
+		args = splitParrallel(instructions);
+		print(args);
+		//status = doInstructions(instructions,path);
 	} while (status);
 	return(0);
 }
