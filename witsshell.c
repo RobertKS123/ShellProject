@@ -91,7 +91,7 @@ char *handleOutput(char **args){
 	return name;
 }
 
-char ***splitParrallel(char **arr){
+char **splitParrallel(char **arr){
 	size_t bufsize = 128;
 	char ***args =  malloc(bufsize * sizeof(char*));
 
@@ -103,12 +103,12 @@ char ***splitParrallel(char **arr){
 	while(arr[p] != NULL){
 		printf("%d\n",p);
 		if (strcmp(arr[p],"&") == 0){
-			//args[i] = temp;
+			args[i] = temp;
 			i++;
 			n = 0;
 			temp = NULL;
 		} else {
-			args[i][n] = arr[p];
+			temp[n] = arr[p];
 			printf("%s\n",temp[n]);
 			n++;
 		}
