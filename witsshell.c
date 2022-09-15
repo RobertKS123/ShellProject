@@ -93,54 +93,29 @@ char *handleOutput(char **args){
 
 char ***splitParrallel(char **arr){
 	size_t bufsize = 128;
-	size_t sbufsize = 32;
-	size_t mbufsize = 64;
 	char ***args =  malloc(bufsize * sizeof(char*));
 
-	int *pos = malloc(sbufsize * sizeof(int*));
-	pos[0] =0;
+	int p = 0;
 	int i = 0;
 	int n = 0;
-	while(arr[i] != NULL){
-		if (strcmp(arr[i],"&" )==0){
-			pos[n] = i;
+	char **temp;
+
+	while(arr[p] != NULL){
+		printf("%d\n",p);
+		if (strcmp(arr[p],"&") == 0){
+			//args[i] = temp;
+			i++;
+			n = 0;
+			temp = NULL;
+		} else {
+			args[i][n] = arr[p];
+			printf("%s\n",temp[n]);
 			n++;
 		}
-		i++;
+		p++;
 	}
-	if (pos[0] == 0 ){
-		args[1] = arr;
-	} else {
-		for (int p=0; p<n+1; p++){
-			printf("P: %d\n",p);
-			char **temp = malloc(mbufsize * sizeof(char*));
-			int end = 0;
-			int j = 0;
-			if (p > n-1){
-				end = pos[p+1];
-				//printf("p+1\n");
-			} else {
-				end = i-1;
-				//printf("i-1\n");
-			}
-			if (p=0) {
-				j=0;
-				end = pos[0]-1;
-			} else {
-				j = pos[p+1];
-			}
-			int m = 0;
-			//printf("%d\n",end);
-			for (j; j<end; j++){
-				temp[m] = arr[j];
-				printf("%s\n", temp[m]);
-				m++;
-			}
-			args[p] = temp;
-		}
-	}
-	printf("i: %d\n", i);
-	printf("n: %d\n", n);
+	args[i] = temp;
+
 	return args;
 }
 
@@ -231,7 +206,7 @@ int main(int MainArgc, char *MainArgv[]){
 		line = readLine();
 		instructions = splitLine(line);
 		args = splitParrallel(instructions);
-		print(args);
+		//print(args);
 		//status = doInstructions(instructions,path);
 	} while (status);
 	return(0);
