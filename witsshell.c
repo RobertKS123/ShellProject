@@ -199,6 +199,7 @@ int builtIns(char ***a, char **path) {
 	}
 	if (strcmp(args[0],"cd" )==0) {
 		chdir(args[1]);
+		return 0;
 	}
 	a = ammendPaths(a,path);
 	if (path[0] != NULL){
