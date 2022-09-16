@@ -35,7 +35,7 @@ char *readLine(){
 	return buffer;
 }
 
-char **splitLine(char *line){
+char **splitLine(char *line, int n){
 
 	size_t bufsize = 64;
 	char **instructions =  malloc(bufsize * sizeof(char*));
@@ -46,9 +46,14 @@ char **splitLine(char *line){
     while( (found = strsep(&line,delim)) != NULL ){
 		instructions[p] = found; 
 		p++;
+	} 
+	//printf("n: %d\n",n);	
+	if (n > 0) {
+		for (int i=1; i<=n; i++){
+			//printf("remove pointer i: %d\n",i);
+			instructions[p-i] = NULL;
+		}
 	}
-	instructions[p-1] = NULL;
-
 	return instructions;
 }
 
@@ -206,7 +211,58 @@ int builtIns(char ***a, char **path) {
 	return 1;
 }
 
+int fileLength(char *fileName) {
+	FILE *fp = fopen(fileName,"r");
+	if (!fp) {
+		fprintf(stderr, "Error opening file '%s'\n", fileName);
+		return -1;
+	}
+	int lines=0;
+	int ch=0;
+	while(!feof(fp))
+	{
+		ch = fgetc(fp);
+		if(ch == '\n')
+		{	
+			lines++;
+		}
+	}
+	lines++;
+	fclose(fp);
+	//printf("%d\n",lines);
+	return(lines);
+}
+
+int batchMode(char *fileName){
+	FILE *fp = fopen(fileName,"r");
+
+	size_t l = 0;
+	ssize_t read;
+	char * rdLine = NULL;
+	int len = fileLength(fileName);
+
+	fp = fopen(fileName,"r");
+
+	while ((read = getline(&rdLine, &l, fp)) != -1) {
+		printf("Retrieved line of length %zu:\n", read);
+		//printf("%s", rdLine);
+		int s;
+		if (len == 1) {
+			s = 0;
+		} else {
+			s = 2;
+		}
+		char **split = splitLine(rdLine, s);
+		print(split);
+		len--;
+		//printf("%zd\n",l);
+	}
+	fclose(fp);
+}
+
 int main(int MainArgc, char *MainArgv[]){
+
+	//print(MainArgv);
 
 	size_t bufsize = 64;
 	path = malloc(bufsize * sizeof(char*));
@@ -217,14 +273,15 @@ int main(int MainArgc, char *MainArgv[]){
 	char **instructions;
 	char ***args;
 
-	do {
-		printf("witsshell> ");
-		line = readLine();
-		instructions = splitLine(line);
-		args = splitParrallel(instructions);
-		//print(args);
-		status = builtIns(args,path);
-	} while (status);
+	status = batchMode(MainArgv[1]);
+	// do {
+	// 	printf("witsshell> ");
+	// 	line = readLine();
+	// 	instructions = splitLine(line,1);
+	// 	args = splitParrallel(instructions);
+	// 	//print(args);
+	// 	status = builtIns(args,path);
+	// } while (status);
 	return(0);
 }
 
