@@ -13,11 +13,11 @@ void print(char **arr) {
 	int p = 0;
 	char *arr2 = arr[p];
 	while (arr[p] != NULL) {
-		printf("%s ",arr2);
+		printf("%s\n",arr2);
 		p++;
 		arr2 = arr[p];
 	}
-	printf("\n");
+	//printf("\n");
 }
 
 char *readLine(){
@@ -42,22 +42,23 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 	char **instructions =  malloc(bufsize * sizeof(char*));
 	char *found;
 	int p = 0;
-	const char *delim = "\t\r\a\n ";
+	const char *delim = "\t\a\n ";
 
     while( (found = strsep(&line,delim)) != NULL ){
-		if (strcmp(line,"") != 0) {
+		if (strcmp(found,"") != 0) {
 			instructions[p] = found; 
 			p++;
 		}
 	} 
-	
+
 	//printf("n: %d\n",n);	
-	// if (n > 0) {
-	// 	for (int i=1; i<=n; i++){
-	// 		//printf("remove pointer i: %d\n",i);
-	// 		instructions[p-i] = NULL;
-	// 	}
-	// }
+	if (n > 0) {
+		for (int i=1; i<=n; i++){
+			//printf("remove pointer i: %d\n",i);
+			instructions[p-i] = NULL;
+		}
+	}
+	print(instructions);
 	return instructions;
 }
 
@@ -298,7 +299,7 @@ int main(int MainArgc, char *MainArgv[]){
 		do {
 			printf("witsshell> ");
 			line = readLine();
-			instructions = splitLine(line,1);
+			instructions = splitLine(line,0);
 			args = splitParrallel(instructions);
 			//print(args);
 			status = builtIns(args,path);
