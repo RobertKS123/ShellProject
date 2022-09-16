@@ -13,10 +13,11 @@ void print(char **arr) {
 	int p = 0;
 	char *arr2 = arr[p];
 	while (arr[p] != NULL) {
-		printf("%s\n",arr2);
+		printf("%s ",arr2);
 		p++;
 		arr2 = arr[p];
 	}
+	printf("\n");
 }
 
 char *readLine(){
@@ -35,7 +36,7 @@ char *readLine(){
 	return buffer;
 }
 
-char **splitLine(char *line, int n){
+char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 
 	size_t bufsize = 64;
 	char **instructions =  malloc(bufsize * sizeof(char*));
@@ -44,16 +45,19 @@ char **splitLine(char *line, int n){
 	const char *delim = "\t\r\a\n ";
 
     while( (found = strsep(&line,delim)) != NULL ){
-		instructions[p] = found; 
-		p++;
-	} 
-	//printf("n: %d\n",n);	
-	if (n > 0) {
-		for (int i=1; i<=n; i++){
-			//printf("remove pointer i: %d\n",i);
-			instructions[p-i] = NULL;
+		if (strcmp(line,"") != 0) {
+			instructions[p] = found; 
+			p++;
 		}
-	}
+	} 
+	
+	//printf("n: %d\n",n);	
+	// if (n > 0) {
+	// 	for (int i=1; i<=n; i++){
+	// 		//printf("remove pointer i: %d\n",i);
+	// 		instructions[p-i] = NULL;
+	// 	}
+	// }
 	return instructions;
 }
 
@@ -74,6 +78,7 @@ char **handlePath(char **args, char **path){
 char *handleOutput(char **args){
 	char *name = NULL;
 	int i = 0;
+	//print(args);
 	while (args[i] != NULL) {
 		if (strcmp(args[i],">" )==0){
 			if (args[i+2] == NULL) {
@@ -104,21 +109,25 @@ char ***splitParrallel(char **arr){
 		//printf("%s\n",arr[p]);
 		if (strcmp(arr[p],"&") == 0){
 			args[i] = temp;
+			//printf("%d\n",i);
 			//print(args[i]);
+			//print(temp);
 			i++;
 			n = 0;
-			free(temp);
 			temp = malloc(bufsize * sizeof(char*));
 		} else {
 			temp[n] = arr[p];
-			//printf("%s\n",temp[n]);
 			n++;
 		}
 		p++;
 	}
+	//printf("%d\n",i);
 	args[i] = temp;
 	//print(args[i]);
+	//print(temp);
 
+	//print(args[0]);
+	//print(args[1]);
 	return args;
 }
 
@@ -143,7 +152,7 @@ char ***ammendPaths(char ***args, char **path) {
 	return args;
 }
 
-int doInstructions(char ***args, char **path){
+int doInstructions(char ***args){
 	int wpid;
 	int status = 0;
 
@@ -154,22 +163,34 @@ int doInstructions(char ***args, char **path){
 	}
 	//printf("%d\n",p);
 
+	//size_t bufsize = 64;
+	//char **temp = malloc(bufsize * sizeof(char*));
+
 	pid_t pids[p];
 	for (int i=0; i < p; ++i) {
-		char **temp = args[0];
+		//printf("%d\n",i);
+		//temp = args[i];
 		//print(temp);
 		if ((pids[i] = fork()) < 0) {
 			perror("fork");
-			exit(1);
+			//exit(1);
 		} else if (pids[i] == 0) {
+			char** temp = args[i];
 			char *fileName = handleOutput(temp);
 			FILE *fp;
 			if (fileName != NULL) {
+				//printf("hit");
 				fp = freopen(fileName, "w", stdout); 
 			}
-			status = execv(temp[0], temp); 
+			status = execv(temp[0], temp);
+			if (status == -1) {
+				printf("Process did not terminate correctly\n");
+				exit(1);
+			}
 			fclose(fp);
 		}
+		//free(temp);
+		//temp = malloc(bufsize * sizeof(char*));
 	}
 
 	pid_t pid;
@@ -177,18 +198,6 @@ int doInstructions(char ***args, char **path){
 		pid = wait(&status);
 		p--;
 	}
-
-	// char **temp = args[0];
-	// 	print(temp);
-	// int pid = fork();
-	// if (pid == 0){
-	// 	status = execv(temp[0], temp); 
-	// 	if (status == -1) {
-	// 		printf("Process did not terminate correctly\n");
-	// 		exit(1);
-	// 	}
-	// }
-	// while ((wpid = wait(&status)) > 0);
 }
 
 int builtIns(char ***a, char **path) {
@@ -205,8 +214,10 @@ int builtIns(char ***a, char **path) {
 		return 1;
 	}
 	a = ammendPaths(a,path);
+	//print(a[0]);
+	//	print(a[1]);
 	if (path[0] != NULL){
-		int l = doInstructions(a,path);
+		int l = doInstructions(a);
 	}
 	return 1;
 }
@@ -233,19 +244,23 @@ int fileLength(char *fileName) {
 	return(lines);
 }
 
-int batchMode(char *fileName){
+int batchMode(char *fileName, char **path){
+
+	int status = 0;
+
 	FILE *fp = fopen(fileName,"r");
 
 	size_t l = 0;
 	ssize_t read;
 	char * rdLine = NULL;
 	int len = fileLength(fileName);
+	if (len == -1){
+		return 0;
+	}
 
 	fp = fopen(fileName,"r");
 
 	while ((read = getline(&rdLine, &l, fp)) != -1) {
-		printf("Retrieved line of length %zu:\n", read);
-		//printf("%s", rdLine);
 		int s;
 		if (len == 1) {
 			s = 0;
@@ -253,11 +268,15 @@ int batchMode(char *fileName){
 			s = 2;
 		}
 		char **split = splitLine(rdLine, s);
-		print(split);
+		//print(split);
+		char ***args = splitParrallel(split);
+		status = builtIns(args,path);
 		len--;
 		//printf("%zd\n",l);
 	}
 	fclose(fp);
+
+	return status;
 }
 
 int main(int MainArgc, char *MainArgv[]){
@@ -273,15 +292,18 @@ int main(int MainArgc, char *MainArgv[]){
 	char **instructions;
 	char ***args;
 
-	status = batchMode(MainArgv[1]);
-	// do {
-	// 	printf("witsshell> ");
-	// 	line = readLine();
-	// 	instructions = splitLine(line,1);
-	// 	args = splitParrallel(instructions);
-	// 	//print(args);
-	// 	status = builtIns(args,path);
-	// } while (status);
+	if (MainArgv[1] !=  NULL) {
+		status = batchMode(MainArgv[1], path);
+	} else {
+		do {
+			printf("witsshell> ");
+			line = readLine();
+			instructions = splitLine(line,1);
+			args = splitParrallel(instructions);
+			//print(args);
+			status = builtIns(args,path);
+		} while (status);
+	}
 	return(0);
 }
 
