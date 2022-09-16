@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 char **path;
+char error_message[30] = "An error has occurred\n";
 
 void print(char **arr) {
 	int p = 0;
@@ -28,7 +29,7 @@ char *readLine(){
 	buffer = (char *)malloc(bufsize * sizeof(char));
     if( buffer == NULL)
     {
-        perror("Unable to allocate buffer");
+        write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
 
@@ -58,7 +59,7 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 			instructions[p-i] = NULL;
 		}
 	}
-	print(instructions);
+	//print(instructions);
 	return instructions;
 }
 
@@ -88,7 +89,7 @@ char *handleOutput(char **args){
 				args[i+1] = NULL;
 				//printf("%s\n",name);
 			} else {
-				printf("ERROR\n");
+				write(STDERR_FILENO, error_message, strlen(error_message));
 			}
 		}
 		i++;
@@ -135,6 +136,7 @@ char ***splitParrallel(char **arr){
 char ***ammendPaths(char ***args, char **path) {
 	int p = 0;
 	while (args[p] != NULL) {
+		//printf("hit");
 		char **temp = args[p];
 		int i = 0;
 		while (path[i] != NULL) {
@@ -161,6 +163,10 @@ int doInstructions(char ***args){
 
 	while (args[p] != NULL) {
 		p++;
+	} 
+	if (p == 0) {
+		write(STDERR_FILENO, error_message, strlen(error_message));
+		return(1);
 	}
 	//printf("%d\n",p);
 
@@ -173,7 +179,7 @@ int doInstructions(char ***args){
 		//temp = args[i];
 		//print(temp);
 		if ((pids[i] = fork()) < 0) {
-			perror("fork");
+			write(STDERR_FILENO, error_message, strlen(error_message));
 			//exit(1);
 		} else if (pids[i] == 0) {
 			char** temp = args[i];
@@ -185,7 +191,7 @@ int doInstructions(char ***args){
 			}
 			status = execv(temp[0], temp);
 			if (status == -1) {
-				printf("Process did not terminate correctly\n");
+				write(STDERR_FILENO, error_message, strlen(error_message));
 				exit(1);
 			}
 			fclose(fp);
@@ -203,6 +209,9 @@ int doInstructions(char ***args){
 
 int builtIns(char ***a, char **path) {
 	char **args = a[0];
+	if (args[0] == NULL){
+		return(1);
+	}
 	if (strcmp(args[0],"path" )==0) {
 		path = handlePath(args,path);
 		return 1;
@@ -215,8 +224,6 @@ int builtIns(char ***a, char **path) {
 		return 1;
 	}
 	a = ammendPaths(a,path);
-	//print(a[0]);
-	//	print(a[1]);
 	if (path[0] != NULL){
 		int l = doInstructions(a);
 	}
@@ -226,7 +233,8 @@ int builtIns(char ***a, char **path) {
 int fileLength(char *fileName) {
 	FILE *fp = fopen(fileName,"r");
 	if (!fp) {
-		fprintf(stderr, "Error opening file '%s'\n", fileName);
+		//fprintf(stderr, "Error opening file '%s'\n", fileName);
+		//write(STDERR_FILENO, error_message, strlen(error_message));
 		return -1;
 	}
 	int lines=0;
@@ -284,6 +292,7 @@ int main(int MainArgc, char *MainArgv[]){
 
 	//print(MainArgv);
 
+	//printf("%s\n",MainArgv[2]);
 	size_t bufsize = 64;
 	path = malloc(bufsize * sizeof(char*));
 	path[0] = "/bin/";
@@ -293,9 +302,14 @@ int main(int MainArgc, char *MainArgv[]){
 	char **instructions;
 	char ***args;
 
+	//error = malloc(bufsize * sizeof(char*));
+
+	
 	if (MainArgv[1] !=  NULL) {
+		if (MainArgv[2] != NULL)
+			return(0);
 		status = batchMode(MainArgv[1], path);
-	} else {
+	}  else {
 		do {
 			printf("witsshell> ");
 			line = readLine();
