@@ -33,6 +33,7 @@ char *readLine(){
         exit(1);
     }
 
+	//printf("got this far");
 	characters = getline(&buffer,&bufsize,stdin);
 	return buffer;
 }
@@ -83,13 +84,20 @@ char *handleOutput(char **args){
 	//print(args);
 	while (args[i] != NULL) {
 		if (strcmp(args[i],">" )==0){
-			if (args[i+2] == NULL) {
+			//printf("%s\n",args[i+2]);
+			if (args[i+1] != NULL){
 				name = args[i+1];
 				args[i] = NULL;
 				args[i+1] = NULL;
-				//printf("%s\n",name);
+			}  else {
+				write(STDERR_FILENO, error_message, strlen(error_message));
+				exit(1);
+			}
+			if (args[i+2] == NULL) {
+
 			} else {
 				write(STDERR_FILENO, error_message, strlen(error_message));
+				exit(1);
 			}
 		}
 		i++;
@@ -190,6 +198,7 @@ int doInstructions(char ***args){
 				fp = freopen(fileName, "w", stdout); 
 			}
 			status = execv(temp[0], temp);
+			//printf("%d\n",status);
 			if (status == -1) {
 				write(STDERR_FILENO, error_message, strlen(error_message));
 				exit(1);
@@ -207,6 +216,30 @@ int doInstructions(char ***args){
 	}
 }
 
+int workingDir(char **args) {
+	int i = 1;
+	if (args[i] == NULL) {
+		//printf("UHHH");
+		write(STDERR_FILENO, error_message, strlen(error_message));
+		return(0);
+	}
+	if (strcmp(args[i],"-la") == 0){
+		i++;
+	}
+	//printf("NOOOO");
+	if (access(args[i],X_OK) == -1){
+		write(STDERR_FILENO, error_message, strlen(error_message));
+		return(0);
+	} else {
+		i++;
+		if(args[i] != NULL) {
+			write(STDERR_FILENO, error_message, strlen(error_message));
+			return(0);
+		}
+	}
+
+}
+
 int builtIns(char ***a, char **path) {
 	char **args = a[0];
 	if (args[0] == NULL){
@@ -217,11 +250,42 @@ int builtIns(char ***a, char **path) {
 		return 1;
 	}
 	if (strcmp(args[0],"exit" )==0) {
-		return 0;
+		if (args[1] != NULL) {
+			write(STDERR_FILENO, error_message, strlen(error_message));
+			return(0);
+		} else {
+			return 0;
+		}
 	}
 	if (strcmp(args[0],"cd" )==0) {
-		chdir(args[1]);
+		if (args[1] != NULL){
+			if (access(args[1],X_OK) == -1){
+				write(STDERR_FILENO, error_message, strlen(error_message));
+				return(1);
+			} 
+			if(args[2] != NULL) {
+				write(STDERR_FILENO, error_message, strlen(error_message));
+				return(1);
+			}
+			chdir(args[1]);
+		} else {
+			write(STDERR_FILENO, error_message, strlen(error_message));
+			return(1);
+		}
 		return 1;
+	}
+	// if (strcmp(args[0],"ls" )==0) {
+	// 	//printf("I stop here\n");
+	// 	int r = workingDir(args);
+	// 	if (r == 0){
+	// 		return 1;
+	// 	}
+	// }
+	//print(path);
+	if (path[0] == NULL) {
+		// printf("I am printing\n");
+		// write(STDERR_FILENO, error_message, strlen(error_message));
+		return(1);
 	}
 	a = ammendPaths(a,path);
 	if (path[0] != NULL){
@@ -232,11 +296,16 @@ int builtIns(char ***a, char **path) {
 
 int fileLength(char *fileName) {
 	FILE *fp = fopen(fileName,"r");
-	if (!fp) {
-		//fprintf(stderr, "Error opening file '%s'\n", fileName);
-		//write(STDERR_FILENO, error_message, strlen(error_message));
-		return -1;
+	if (access(fileName, F_OK) == 0) {
+		//printf("here\n");
+	} else {
+		//printf("there\n");
 	}
+	// if (!fp) {
+	// 	fprintf(stderr, "Error opening file '%s'\n", fileName);
+	// 	write(STDERR_FILENO, error_message, strlen(error_message));
+	// 	return -1;
+	// }
 	int lines=0;
 	int ch=0;
 	while(!feof(fp))
@@ -254,6 +323,8 @@ int fileLength(char *fileName) {
 }
 
 int batchMode(char *fileName, char **path){
+
+	//printf("hello");
 
 	int status = 0;
 
@@ -274,9 +345,11 @@ int batchMode(char *fileName, char **path){
 		if (len == 1) {
 			s = 0;
 		} else {
-			s = 2;
+			s = 0;
 		}
 		char **split = splitLine(rdLine, s);
+		//print(split);
+		//printf("hello\n");
 		//print(split);
 		char ***args = splitParrallel(split);
 		status = builtIns(args,path);
@@ -306,8 +379,10 @@ int main(int MainArgc, char *MainArgv[]){
 
 	
 	if (MainArgv[1] !=  NULL) {
-		if (MainArgv[2] != NULL)
+		if (MainArgv[2] != NULL) {
+			//print(MainArgv);
 			return(0);
+		}
 		status = batchMode(MainArgv[1], path);
 	}  else {
 		do {
