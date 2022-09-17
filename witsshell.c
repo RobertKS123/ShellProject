@@ -65,16 +65,38 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 }
 
 char **handlePath(char **args, char **path){
+	size_t bufsize = 64;
+	char *temp = malloc(bufsize * sizeof(char*));
+	char sla[] = "/";
+	print(path);
 	if (args[1] == NULL) {
 		path[0] = NULL;
 	} else {
 		int p = 1;
 		while (args[p] != NULL)
 		{
-			path[p-1] = args[p];
-			p++;
+			int j = 0;
+			temp = args[p];
+			//printf("%s\n", temp);
+			//print(args);
+			//printf("%ld\n", sizeof temp);
+			while (strcmp(&temp[j],"\0") != 0){
+				printf("%d\n",j);
+				j++;
+			}
+			if (strcmp(&temp[j-1],"/") == 0) {
+				path[p-1] = args[p];
+				p++;
+			} else {
+				temp[j] = sla[0];
+				args[p] = temp;
+				path[p-1] = args[p];
+				p++;
+				temp = malloc(bufsize * sizeof(char*));
+			} 
 		}
 	}
+	print(path);
 	return path;
 }
 
@@ -105,15 +127,51 @@ char *handleOutput(char **args){
 	return name;
 }
 
+char **splitLineParrallel(char *line, int n){
+
+	size_t bufsize = 64;
+	char **instructions =  malloc(bufsize * sizeof(char*));
+	char *found;
+	int p = 0;
+	const char *delim = "&";
+
+    while( (found = strsep(&line,delim)) != NULL ){
+		if (strcmp(found,"") != 0) {
+			instructions[p] = found; 
+			p++;
+		}
+	} 
+
+	//printf("n: %d\n",n);	
+	if (n > 0) {
+		for (int i=1; i<=n; i++){
+			//printf("remove pointer i: %d\n",i);
+			instructions[p-i] = NULL;
+		}
+	}
+	//print(instructions);
+	return instructions;
+}
+
 char ***splitParrallel(char **arr){
 	size_t bufsize = 128;
 	char ***args =  malloc(bufsize * sizeof(char*));
-	struct block *blocks;
+	//struct block *blocks;
 
 	int p = 0;
 	int i = 0;
 	int n = 0;
 	char **temp = malloc(bufsize * sizeof(char*));
+	// //printf("I did it\n");
+	// while(arr[p] != NULL){
+	// 	p++;
+	// }
+	// //print(arr);
+	// if (strcmp(arr[p-1],"&") == 0 ){
+	// 	//printf("%s\n",arr[p-1]);
+	// 	arr[p-1] = NULL;
+	// }
+	// p = 0;
 
 	while(arr[p] != NULL){
 		//printf("%s\n",arr[p]);
@@ -136,6 +194,10 @@ char ***splitParrallel(char **arr){
 	//print(args[i]);
 	//print(temp);
 
+	if (p == 1) {
+		//check for s1&s2&s3
+
+	}
 	//print(args[0]);
 	//print(args[1]);
 	return args;
@@ -393,6 +455,7 @@ int main(int MainArgc, char *MainArgv[]){
 			instructions = splitLine(line,0);
 			args = splitParrallel(instructions);
 			//print(args);
+			//printf("I did it\n");
 			status = builtIns(args,path);
 		} while (status);
 	}
