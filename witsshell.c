@@ -243,6 +243,7 @@ int workingDir(char **args) {
 int builtIns(char ***a, char **path) {
 	char **args = a[0];
 	if (args[0] == NULL){
+		//write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
 	if (strcmp(args[0],"path" )==0) {
@@ -301,11 +302,11 @@ int fileLength(char *fileName) {
 	} else {
 		//printf("there\n");
 	}
-	// if (!fp) {
-	// 	fprintf(stderr, "Error opening file '%s'\n", fileName);
-	// 	write(STDERR_FILENO, error_message, strlen(error_message));
-	// 	return -1;
-	// }
+	if (!fp) {
+		//fprintf(stderr, "Error opening file '%s'\n", fileName);
+		write(STDERR_FILENO, error_message, strlen(error_message));
+		exit(1);
+	}
 	int lines=0;
 	int ch=0;
 	while(!feof(fp))
@@ -381,7 +382,8 @@ int main(int MainArgc, char *MainArgv[]){
 	if (MainArgv[1] !=  NULL) {
 		if (MainArgv[2] != NULL) {
 			//print(MainArgv);
-			return(0);
+			write(STDERR_FILENO, error_message, strlen(error_message));
+			exit(1);
 		}
 		status = batchMode(MainArgv[1], path);
 	}  else {
