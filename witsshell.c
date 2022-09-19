@@ -76,7 +76,7 @@ char **handlePath(char **args, char **path){
 		while (args[p] != NULL)
 		{
 			char *s = strchr(args[p],'/');
-			printf("This Line contains /: %s\n",s);
+			//printf("This Line contains /: %s\n",s);
 			if(s != NULL){
 				memcpy(tmp,args[p], sizeof args[p]);				
 				path[p-1] = tmp;	
@@ -198,10 +198,7 @@ char ***ammendPaths(char ***args, char **path) {
 	int p = 0;
 	while (args[p] != NULL) {
 		char **temp = args[p];
-		print(temp);
 		int i = 0;
-		printf("path:\n");
-		print(path);
 		while (path[i] != NULL) {
 			char *tempPath = (char *) malloc( strlen(path[i]) + 1 );
 			strcpy(tempPath,path[i]);
@@ -213,7 +210,6 @@ char ***ammendPaths(char ***args, char **path) {
 				i++;
 			}
 		}
-		print(args[p]);
 		p++;
 	}
 	return args;
@@ -331,10 +327,10 @@ int builtIns(char ***a, char **path) {
 	if (path[0] == NULL) {
 		return(1);
 	}
-	// a = ammendPaths(a,path);
-	// if (path[0] != NULL){
-	// 	int l = doInstructions(a);
-	// }
+	a = ammendPaths(a,path);
+	if (path[0] != NULL){
+		int l = doInstructions(a);
+	}
 	return 0;
 }
 
@@ -390,31 +386,31 @@ int batchMode(char *fileName){
 	fp = fopen(fileName,"r");
 
 	while ((read = getline(&rdLine, &l, fp)) != -1) {
-
+		status = 0;
 		char **split = splitLine(rdLine, 0);
-		printf("path1:\n");
-		print(path);
+		//printf("path1:\n");
+		//print(path);
 
 		char ***args = splitParrallel(split);
 
-		status = builtIns(args,path);
-		if (status != 1) {
-			char **temp = args[0];
-			if (strcmp(temp[0],"path" )==0) {
-				path = handlePath(temp,path);
-				//print(path);
-				status = 1;
-			}
+		char **temp = args[0];
+		if (strcmp(temp[0],"path" )==0) {
+			path = handlePath(temp,path);
+			//print(path);
+			status = 1;
 		}
 		if (status != 1) {
-			//print(args[0]);
-			printf("run ammend\n");
-			print(path);
-			args = ammendPaths(args,path);
-			if (path[0] != NULL){
-				status = doInstructions(args);
-			}
+			status = builtIns(args,path);
 		}
+		// if (status != 1) {
+		// 	//print(args[0]);
+		// 	printf("run ammend\n");
+		// 	print(path);
+		// 	args = ammendPaths(args,path);
+		// 	if (path[0] != NULL){
+		// 		status = doInstructions(args);
+		// 	}
+		// }
 		//len--;
 	}
 	fclose(fp);
