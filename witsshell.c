@@ -125,31 +125,28 @@ char *handleOutput(char **args){
 	return name;
 }
 
-char **splitLineParrallel(char *line, int n){
-
-	size_t bufsize = 64;
-	char **instructions =  malloc(bufsize * sizeof(char*));
-	char *found;
-	int p = 0;
-	const char *delim = "&";
-
-    while( (found = strsep(&line,delim)) != NULL ){
-		if (strcmp(found,"") != 0) {
-			instructions[p] = found; 
-			p++;
-		}
-	} 
-
-	//printf("n: %d\n",n);	
-	if (n > 0) {
-		for (int i=1; i<=n; i++){
-			//printf("remove pointer i: %d\n",i);
-			instructions[p-i] = NULL;
-		}
-	}
-	//print(instructions);
-	return instructions;
-}
+// char **splitLineParrallel(char *line, int n){
+// 	size_t bufsize = 64;
+// 	char **instructions =  malloc(bufsize * sizeof(char*));
+// 	char *found;
+// 	int p = 0;
+// 	const char *delim = "&";
+//     while( (found = strsep(&line,delim)) != NULL ){
+// 		if (strcmp(found,"") != 0) {
+// 			instructions[p] = found; 
+// 			p++;
+// 		}
+// 	} 
+// 	//printf("n: %d\n",n);	
+// 	if (n > 0) {
+// 		for (int i=1; i<=n; i++){
+// 			//printf("remove pointer i: %d\n",i);
+// 			instructions[p-i] = NULL;
+// 		}
+// 	}
+// 	//print(instructions);
+// 	return instructions;
+// }
 
 char ***splitParrallel(char **arr){
 	size_t bufsize = 128;
@@ -161,15 +158,16 @@ char ***splitParrallel(char **arr){
 	int n = 0;
 	char **temp = malloc(bufsize * sizeof(char*));
 	// //printf("I did it\n");
-	// while(arr[p] != NULL){
-	// 	p++;
-	// }
-	// //print(arr);
-	// if (strcmp(arr[p-1],"&") == 0 ){
-	// 	//printf("%s\n",arr[p-1]);
-	// 	arr[p-1] = NULL;
-	// }
-	// p = 0;
+	//print(arr);
+	while(arr[p] != NULL){
+		p++;
+	}
+	if (p != 0) {
+		if (strcmp(arr[p-1],"&") == 0 ){
+			arr[p-1] = NULL;
+		}
+	}
+	p = 0;
 
 	while(arr[p] != NULL){
 		//printf("%s\n",arr[p]);
