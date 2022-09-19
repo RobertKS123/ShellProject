@@ -299,6 +299,11 @@ int builtIns(char ***a, char **path) {
 		//write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
+	if (strcmp(args[0],"path" )==0) {
+		path = handlePath(args,path);
+		//print(path);
+		return (1);
+	}
 	if (strcmp(args[0],"exit" )==0) {
 		if (args[1] != NULL) {
 			write(STDERR_FILENO, error_message, strlen(error_message));
@@ -362,13 +367,9 @@ int fileLength(char *fileName) {
 	return(lines);
 }
 
-int batchMode(char *fileName){
+int batchMode(char *fileName, char **path){
 
 	//printf("hello");
-	size_t bufsize = 128;
-	path = malloc(bufsize * sizeof(char*));
-	path[0] = "/bin/";
-	path[1] = "usr/bin/";
 
 
 	int status = 0;
@@ -394,14 +395,14 @@ int batchMode(char *fileName){
 		char ***args = splitParrallel(split);
 
 		char **temp = args[0];
-		if (strcmp(temp[0],"path" )==0) {
-			path = handlePath(temp,path);
-			//print(path);
-			status = 1;
-		}
-		if (status != 1) {
+		// if (strcmp(temp[0],"path" )==0) {
+		// 	path = handlePath(temp,path);
+		// 	//print(path);
+		// 	status = 1;
+		// }
+		//if (status != 1) {
 			status = builtIns(args,path);
-		}
+		//}
 		// if (status != 1) {
 		// 	//print(args[0]);
 		// 	printf("run ammend\n");
@@ -426,6 +427,10 @@ int main(int MainArgc, char *MainArgv[]){
 	//size_t bufsize = 64;
 	//path = malloc(bufsize * sizeof(char*));
 	//path[0] = "/bin/";
+	size_t bufsize = 128;
+	path = malloc(bufsize * sizeof(char*));
+	path[0] = "/bin/";
+	path[1] = "usr/bin/";
 
 	bool status = 1;
 	char *line;
@@ -441,7 +446,7 @@ int main(int MainArgc, char *MainArgv[]){
 			write(STDERR_FILENO, error_message, strlen(error_message));
 			exit(1);
 		}
-		status = batchMode(MainArgv[1]);
+		status = batchMode(MainArgv[1],path);
 	}  else {
 		char **path;
 		path[0] = "/bin/";
