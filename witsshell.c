@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <fcntl.h>
 
+//char **path;
 char **path;
 char error_message[30] = "An error has occurred\n";
 
@@ -65,38 +66,28 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 }
 
 char **handlePath(char **args, char **path){
+
 	size_t bufsize = 64;
-	char *temp = malloc(bufsize * sizeof(char*));
-	char sla[] = "/";
-	print(path);
+	char *tmp = malloc(bufsize * sizeof(char*));
 	if (args[1] == NULL) {
 		path[0] = NULL;
 	} else {
 		int p = 1;
 		while (args[p] != NULL)
 		{
-			int j = 0;
-			temp = args[p];
-			//printf("%s\n", temp);
-			//print(args);
-			//printf("%ld\n", sizeof temp);
-			while (strcmp(&temp[j],"\0") != 0){
-				printf("%d\n",j);
-				j++;
-			}
-			if (strcmp(&temp[j-1],"/") == 0) {
-				path[p-1] = args[p];
-				p++;
+			char *s = strchr(args[p],'/');
+			printf("This Line contains /: %s\n",s);
+			if(s != NULL){
+				memcpy(tmp,args[p], sizeof args[p]);				
+				path[p-1] = tmp;	
 			} else {
-				temp[j] = sla[0];
-				args[p] = temp;
-				path[p-1] = args[p];
-				p++;
-				temp = malloc(bufsize * sizeof(char*));
-			} 
+				strcat(args[p],"/");
+				memcpy(tmp,args[p], sizeof args[p]);
+				path[p-1] = tmp;	
+			}
+			p++;
 		}
 	}
-	print(path);
 	return path;
 }
 
@@ -206,9 +197,11 @@ char ***splitParrallel(char **arr){
 char ***ammendPaths(char ***args, char **path) {
 	int p = 0;
 	while (args[p] != NULL) {
-		//printf("hit");
 		char **temp = args[p];
+		print(temp);
 		int i = 0;
+		printf("path:\n");
+		print(path);
 		while (path[i] != NULL) {
 			char *tempPath = (char *) malloc( strlen(path[i]) + 1 );
 			strcpy(tempPath,path[i]);
@@ -220,6 +213,7 @@ char ***ammendPaths(char ***args, char **path) {
 				i++;
 			}
 		}
+		print(args[p]);
 		p++;
 	}
 	return args;
@@ -255,6 +249,7 @@ int doInstructions(char ***args){
 			char** temp = args[i];
 			char *fileName = handleOutput(temp);
 			FILE *fp;
+			//temp = ammendPaths(temp, path);
 			if (fileName != NULL) {
 				//printf("hit");
 				fp = freopen(fileName, "w", stdout); 
@@ -308,10 +303,6 @@ int builtIns(char ***a, char **path) {
 		//write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
-	if (strcmp(args[0],"path" )==0) {
-		path = handlePath(args,path);
-		return 1;
-	}
 	if (strcmp(args[0],"exit" )==0) {
 		if (args[1] != NULL) {
 			write(STDERR_FILENO, error_message, strlen(error_message));
@@ -337,24 +328,14 @@ int builtIns(char ***a, char **path) {
 		}
 		return 1;
 	}
-	// if (strcmp(args[0],"ls" )==0) {
-	// 	//printf("I stop here\n");
-	// 	int r = workingDir(args);
-	// 	if (r == 0){
-	// 		return 1;
-	// 	}
-	// }
-	//print(path);
 	if (path[0] == NULL) {
-		// printf("I am printing\n");
-		// write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
-	a = ammendPaths(a,path);
-	if (path[0] != NULL){
-		int l = doInstructions(a);
-	}
-	return 1;
+	// a = ammendPaths(a,path);
+	// if (path[0] != NULL){
+	// 	int l = doInstructions(a);
+	// }
+	return 0;
 }
 
 int fileLength(char *fileName) {
@@ -385,9 +366,14 @@ int fileLength(char *fileName) {
 	return(lines);
 }
 
-int batchMode(char *fileName, char **path){
+int batchMode(char *fileName){
 
 	//printf("hello");
+	size_t bufsize = 128;
+	path = malloc(bufsize * sizeof(char*));
+	path[0] = "/bin/";
+	path[1] = "usr/bin/";
+
 
 	int status = 0;
 
@@ -404,20 +390,32 @@ int batchMode(char *fileName, char **path){
 	fp = fopen(fileName,"r");
 
 	while ((read = getline(&rdLine, &l, fp)) != -1) {
-		int s;
-		if (len == 1) {
-			s = 0;
-		} else {
-			s = 0;
-		}
-		char **split = splitLine(rdLine, s);
-		//print(split);
-		//printf("hello\n");
-		//print(split);
+
+		char **split = splitLine(rdLine, 0);
+		printf("path1:\n");
+		print(path);
+
 		char ***args = splitParrallel(split);
+
 		status = builtIns(args,path);
-		len--;
-		//printf("%zd\n",l);
+		if (status != 1) {
+			char **temp = args[0];
+			if (strcmp(temp[0],"path" )==0) {
+				path = handlePath(temp,path);
+				//print(path);
+				status = 1;
+			}
+		}
+		if (status != 1) {
+			//print(args[0]);
+			printf("run ammend\n");
+			print(path);
+			args = ammendPaths(args,path);
+			if (path[0] != NULL){
+				status = doInstructions(args);
+			}
+		}
+		//len--;
 	}
 	fclose(fp);
 
@@ -429,9 +427,9 @@ int main(int MainArgc, char *MainArgv[]){
 	//print(MainArgv);
 
 	//printf("%s\n",MainArgv[2]);
-	size_t bufsize = 64;
-	path = malloc(bufsize * sizeof(char*));
-	path[0] = "/bin/";
+	//size_t bufsize = 64;
+	//path = malloc(bufsize * sizeof(char*));
+	//path[0] = "/bin/";
 
 	bool status = 1;
 	char *line;
@@ -447,8 +445,10 @@ int main(int MainArgc, char *MainArgv[]){
 			write(STDERR_FILENO, error_message, strlen(error_message));
 			exit(1);
 		}
-		status = batchMode(MainArgv[1], path);
+		status = batchMode(MainArgv[1]);
 	}  else {
+		char **path;
+		path[0] = "/bin/";
 		do {
 			printf("witsshell> ");
 			line = readLine();
