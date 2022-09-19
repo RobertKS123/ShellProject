@@ -342,7 +342,7 @@ int builtIns(char ***a, char **path) {
 	if (path[0] != NULL){
 		int l = doInstructions(a);
 	}
-	return 0;
+	return 1;
 }
 
 int fileLength(char *fileName) {
@@ -435,8 +435,6 @@ int main(int MainArgc, char *MainArgv[]){
 			line = readLine();
 			instructions = splitLine(line,0);
 			args = splitParrallel(instructions);
-			//print(args);
-			//printf("I did it\n");
 			status = builtIns(args,path);
 		} while (status);
 	}
