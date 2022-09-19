@@ -44,47 +44,79 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 	size_t bufsize = 64;
 	char **instructions =  malloc(bufsize * sizeof(char*));
 	char *found;
+	char *found2;
 	int p = 0;
 	const char *delim = "\t\a\n ";
+	const char *delim2 = "&";
+	const char *delim3 = ">";
 
     while( (found = strsep(&line,delim)) != NULL ){
 		if (strcmp(found,"") != 0) {
-			instructions[p] = found; 
-			p++;
+			int l = strlen(found);
+			if (l > 1) {
+				if (strchr(found,'&')){
+					while((found2 = strsep(&found,delim2)) != NULL ){
+						instructions[p] = found2; 
+						p++;
+						instructions[p] = "&";
+						p++;
+					}
+					instructions[p-1] = NULL;
+				} else if (strchr(found,'>')){
+					while((found2 = strsep(&found,delim3)) != NULL ){
+						instructions[p] = found2; 
+						p++;
+						instructions[p] = ">";
+						p++;
+					} 
+					//printf("last: %s\n", instructions[p]);	
+					instructions[p-1] = NULL;
+				}else  {
+					instructions[p] = found; 
+					p++;
+				}
+			} else {
+				instructions[p] = found; 
+				p++;
+			}
 		}
 	} 
 
-	//printf("n: %d\n",n);	
 	if (n > 0) {
 		for (int i=1; i<=n; i++){
 			//printf("remove pointer i: %d\n",i);
 			instructions[p-i] = NULL;
 		}
 	}
+	//printf("New Set\n");	
 	//print(instructions);
 	return instructions;
 }
 
 char **handlePath(char **args, char **path){
 
-	size_t bufsize = 64;
-	char *tmp = malloc(bufsize * sizeof(char*));
+	size_t bufsize = 128;
 	if (args[1] == NULL) {
 		path[0] = NULL;
 	} else {
 		int p = 1;
 		while (args[p] != NULL) {
-			char *s = strchr(args[p],'/');
+			char *tmp = malloc(bufsize * sizeof(char*));
+			int i = strlen(args[p]);
+			//char *s = strchr(args[p],'/');
+			char x = args[p][i-1];
 			//printf("This Line contains /: %s\n",s);
-			if(s != NULL){
+			//if(s != NULL){
+			if (x == '/'){
 				memcpy(tmp,args[p], sizeof args[p]);				
 				path[p-1] = tmp;	
 			} else {
-				strcat(args[p],"/");
-				memcpy(tmp,args[p], sizeof args[p]);
+				memcpy(tmp,args[p], sizeof args[p] + sizeof(char*));
+				strcat(tmp,"/");
 				path[p-1] = tmp;	
 			}
 			p++;
+			tmp = malloc(bufsize * sizeof(char*));
 		}
 		p=0;
 		while (path[p] != NULL) {
