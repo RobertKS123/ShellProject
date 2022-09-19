@@ -73,8 +73,7 @@ char **handlePath(char **args, char **path){
 		path[0] = NULL;
 	} else {
 		int p = 1;
-		while (args[p] != NULL)
-		{
+		while (args[p] != NULL) {
 			char *s = strchr(args[p],'/');
 			//printf("This Line contains /: %s\n",s);
 			if(s != NULL){
@@ -87,7 +86,15 @@ char **handlePath(char **args, char **path){
 			}
 			p++;
 		}
+		p=0;
+		while (path[p] != NULL) {
+			if(args[p+1] == NULL) {
+				path[p] = NULL;
+			}
+			p++;
+		}
 	}
+	//print(path);
 	return path;
 }
 
@@ -330,6 +337,7 @@ int builtIns(char ***a, char **path) {
 		return 1;
 	}
 	if (path[0] == NULL) {
+		write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
 	a = ammendPaths(a,path);
@@ -369,9 +377,6 @@ int fileLength(char *fileName) {
 
 int batchMode(char *fileName, char **path){
 
-	//printf("hello");
-
-
 	int status = 0;
 
 	FILE *fp = fopen(fileName,"r");
@@ -387,32 +392,17 @@ int batchMode(char *fileName, char **path){
 	fp = fopen(fileName,"r");
 
 	while ((read = getline(&rdLine, &l, fp)) != -1) {
+
 		status = 0;
+
 		char **split = splitLine(rdLine, 0);
-		//printf("path1:\n");
-		//print(path);
 
 		char ***args = splitParrallel(split);
 
 		char **temp = args[0];
-		// if (strcmp(temp[0],"path" )==0) {
-		// 	path = handlePath(temp,path);
-		// 	//print(path);
-		// 	status = 1;
-		// }
-		//if (status != 1) {
-			status = builtIns(args,path);
-		//}
-		// if (status != 1) {
-		// 	//print(args[0]);
-		// 	printf("run ammend\n");
-		// 	print(path);
-		// 	args = ammendPaths(args,path);
-		// 	if (path[0] != NULL){
-		// 		status = doInstructions(args);
-		// 	}
-		// }
-		//len--;
+
+		status = builtIns(args,path);
+
 	}
 	fclose(fp);
 
