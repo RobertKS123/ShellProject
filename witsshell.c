@@ -421,12 +421,6 @@ int batchMode(char *fileName, char **path){
 
 int main(int MainArgc, char *MainArgv[]){
 
-	//print(MainArgv);
-
-	//printf("%s\n",MainArgv[2]);
-	//size_t bufsize = 64;
-	//path = malloc(bufsize * sizeof(char*));
-	//path[0] = "/bin/";
 	size_t bufsize = 128;
 	path = malloc(bufsize * sizeof(char*));
 	path[0] = "/bin/";
@@ -448,8 +442,6 @@ int main(int MainArgc, char *MainArgv[]){
 		}
 		status = batchMode(MainArgv[1],path);
 	}  else {
-		char **path;
-		path[0] = "/bin/";
 		do {
 			printf("witsshell> ");
 			line = readLine();
