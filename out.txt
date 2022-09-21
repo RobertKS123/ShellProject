@@ -1,5 +1,4 @@
-Shell_Project_2022 (1).pdf
-data.txt
+out.txt
 test-witsshell.sh
 tester
 tests
