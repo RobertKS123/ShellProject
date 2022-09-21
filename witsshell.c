@@ -7,10 +7,11 @@
 #include <assert.h>
 #include <fcntl.h>
 
-//char **path;
+
 char **path;
 char error_message[30] = "An error has occurred\n";
 
+//for debug perpouses only 
 void print(char **arr) {
 	int p = 0;
 	char *arr2 = arr[p];
@@ -19,9 +20,9 @@ void print(char **arr) {
 		p++;
 		arr2 = arr[p];
 	}
-	//printf("\n");
 }
 
+//Fetchline from terminal
 char *readLine(){
 	char *buffer;
 	size_t bufsize = 32;
@@ -33,13 +34,12 @@ char *readLine(){
         write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
-
-	//printf("got this far");
 	characters = getline(&buffer,&bufsize,stdin);
 	return buffer;
 }
 
-char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
+//Split line by spaces tabs new lines and breakstrings that do not contain spaces
+char **splitLine(char *line, int n){
 
 	size_t bufsize = 64;
 	char **instructions =  malloc(bufsize * sizeof(char*));
@@ -69,7 +69,6 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 						instructions[p] = ">";
 						p++;
 					} 
-					//printf("last: %s\n", instructions[p]);	
 					instructions[p-1] = NULL;
 				}else  {
 					instructions[p] = found; 
@@ -84,15 +83,13 @@ char **splitLine(char *line, int n){ //IF COMMIT REVERTED CHANGE THIS NBNB
 
 	if (n > 0) {
 		for (int i=1; i<=n; i++){
-			//printf("remove pointer i: %d\n",i);
 			instructions[p-i] = NULL;
 		}
 	}
-	//printf("New Set\n");	
-	//print(instructions);
 	return instructions;
 }
 
+//change the global path variable and append a / to the end if one is not present 
 char **handlePath(char **args, char **path){
 
 	size_t bufsize = 128;
@@ -103,10 +100,7 @@ char **handlePath(char **args, char **path){
 		while (args[p] != NULL) {
 			char *tmp = malloc(bufsize * sizeof(char*));
 			int i = strlen(args[p]);
-			//char *s = strchr(args[p],'/');
 			char x = args[p][i-1];
-			//printf("This Line contains /: %s\n",s);
-			//if(s != NULL){
 			if (x == '/'){
 				memcpy(tmp,args[p], sizeof args[p]);				
 				path[p-1] = tmp;	
@@ -126,17 +120,15 @@ char **handlePath(char **args, char **path){
 			p++;
 		}
 	}
-	//print(path);
 	return path;
 }
 
+//get and return output file name if one is present
 char *handleOutput(char **args){
 	char *name = NULL;
 	int i = 0;
-	//print(args);
 	while (args[i] != NULL) {
 		if (strcmp(args[i],">" )==0){
-			//printf("%s\n",args[i+2]);
 			if (args[i+1] != NULL){
 				name = args[i+1];
 				args[i] = NULL;
@@ -157,40 +149,15 @@ char *handleOutput(char **args){
 	return name;
 }
 
-// char **splitLineParrallel(char *line, int n){
-// 	size_t bufsize = 64;
-// 	char **instructions =  malloc(bufsize * sizeof(char*));
-// 	char *found;
-// 	int p = 0;
-// 	const char *delim = "&";
-//     while( (found = strsep(&line,delim)) != NULL ){
-// 		if (strcmp(found,"") != 0) {
-// 			instructions[p] = found; 
-// 			p++;
-// 		}
-// 	} 
-// 	//printf("n: %d\n",n);	
-// 	if (n > 0) {
-// 		for (int i=1; i<=n; i++){
-// 			//printf("remove pointer i: %d\n",i);
-// 			instructions[p-i] = NULL;
-// 		}
-// 	}
-// 	//print(instructions);
-// 	return instructions;
-// }
-
+//split parrallel commands into a triple pointer
 char ***splitParrallel(char **arr){
 	size_t bufsize = 128;
 	char ***args =  malloc(bufsize * sizeof(char*));
-	//struct block *blocks;
 
 	int p = 0;
 	int i = 0;
 	int n = 0;
 	char **temp = malloc(bufsize * sizeof(char*));
-	// //printf("I did it\n");
-	//print(arr);
 	while(arr[p] != NULL){
 		p++;
 	}
@@ -202,12 +169,8 @@ char ***splitParrallel(char **arr){
 	p = 0;
 
 	while(arr[p] != NULL){
-		//printf("%s\n",arr[p]);
 		if (strcmp(arr[p],"&") == 0){
 			args[i] = temp;
-			//printf("%d\n",i);
-			//print(args[i]);
-			//print(temp);
 			i++;
 			n = 0;
 			temp = malloc(bufsize * sizeof(char*));
@@ -217,20 +180,11 @@ char ***splitParrallel(char **arr){
 		}
 		p++;
 	}
-	//printf("%d\n",i);
 	args[i] = temp;
-	//print(args[i]);
-	//print(temp);
-
-	if (p == 1) {
-		//check for s1&s2&s3
-
-	}
-	//print(args[0]);
-	//print(args[1]);
 	return args;
 }
 
+//check if the specified instruction is valid given the current path of the shell
 char ***ammendPaths(char ***args, char **path) {
 	int p = 0;
 	while (args[p] != NULL) {
@@ -252,6 +206,7 @@ char ***ammendPaths(char ***args, char **path) {
 	return args;
 }
 
+//preform execv and execv parrallel instructions
 int doInstructions(char ***args){
 	int wpid;
 	int status = 0;
@@ -265,16 +220,9 @@ int doInstructions(char ***args){
 		write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
-	//printf("%d\n",p);
-
-	//size_t bufsize = 64;
-	//char **temp = malloc(bufsize * sizeof(char*));
 
 	pid_t pids[p];
 	for (int i=0; i < p; ++i) {
-		//printf("%d\n",i);
-		//temp = args[i];
-		//print(temp);
 		if ((pids[i] = fork()) < 0) {
 			write(STDERR_FILENO, error_message, strlen(error_message));
 			//exit(1);
@@ -282,13 +230,10 @@ int doInstructions(char ***args){
 			char** temp = args[i];
 			char *fileName = handleOutput(temp);
 			FILE *fp;
-			//temp = ammendPaths(temp, path);
 			if (fileName != NULL) {
-				//printf("hit");
 				fp = freopen(fileName, "w", stdout); 
 			}
 			status = execv(temp[0], temp);
-			//printf("%d\n",status);
 			if (status == -1) {
 				write(STDERR_FILENO, error_message, strlen(error_message));
 				exit(1);
@@ -306,17 +251,16 @@ int doInstructions(char ***args){
 	}
 }
 
+//check if a given directory exsists
 int workingDir(char **args) {
 	int i = 1;
 	if (args[i] == NULL) {
-		//printf("UHHH");
 		write(STDERR_FILENO, error_message, strlen(error_message));
 		return(0);
 	}
 	if (strcmp(args[i],"-la") == 0){
 		i++;
 	}
-	//printf("NOOOO");
 	if (access(args[i],X_OK) == -1){
 		write(STDERR_FILENO, error_message, strlen(error_message));
 		return(0);
@@ -330,15 +274,14 @@ int workingDir(char **args) {
 
 }
 
+//check current instruction for any built in commands
 int builtIns(char ***a, char **path) {
 	char **args = a[0];
 	if (args[0] == NULL){
-		//write(STDERR_FILENO, error_message, strlen(error_message));
 		return(1);
 	}
 	if (strcmp(args[0],"path" )==0) {
 		path = handlePath(args,path);
-		//print(path);
 		return (1);
 	}
 	if (strcmp(args[0],"exit" )==0) {
@@ -377,6 +320,7 @@ int builtIns(char ***a, char **path) {
 	return 1;
 }
 
+//checks if a file exsists and returns its number of lines
 int fileLength(char *fileName) {
 	FILE *fp = fopen(fileName,"r");
 	if (access(fileName, F_OK) == 0) {
@@ -405,6 +349,7 @@ int fileLength(char *fileName) {
 	return(lines);
 }
 
+//reads a file and runs the shell in batch mode
 int batchMode(char *fileName, char **path){
 
 	int status = 0;
@@ -439,6 +384,7 @@ int batchMode(char *fileName, char **path){
 	return status;
 }
 
+
 int main(int MainArgc, char *MainArgv[]){
 
 	size_t bufsize = 128;
@@ -450,25 +396,21 @@ int main(int MainArgc, char *MainArgv[]){
 	char *line;
 	char **instructions;
 	char ***args;
-
-	//error = malloc(bufsize * sizeof(char*));
-
 	
 	if (MainArgv[1] !=  NULL) {
 		if (MainArgv[2] != NULL) {
-			//print(MainArgv);
 			write(STDERR_FILENO, error_message, strlen(error_message));
 			exit(1);
 		}
 		status = batchMode(MainArgv[1],path);
 	}  else {
-		do {
+	do {
 			printf("witsshell> ");
 			line = readLine();
 			instructions = splitLine(line,0);
 			args = splitParrallel(instructions);
 			status = builtIns(args,path);
-		} while (status);
+	} while (status);
 	}
 	return(0);
 }
